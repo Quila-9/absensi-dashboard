@@ -5,197 +5,130 @@
 <title>Absensi Karyawan PT Maju Jaya</title>
 
 <style>
-body {
-  font-family: Arial, Helvetica, sans-serif;
-  background: #fff;
-}
-
-/* FILTER */
-.filter {
-  margin: 10px 0;
-}
-
-/* TABLE */
-table {
-  border-collapse: collapse;
-  width: 100%;
-  table-layout: fixed;
-}
-
-th, td {
-  border: 1px solid #000;
-  text-align: center;
-  font-size: 12px;
-  height: 28px;
-  padding: 2px;
-}
-
-.title {
-  background: #f7c600;
-  font-weight: bold;
-  font-size: 18px;
-}
-
-.subtitle {
-  background: #ffe699;
-  font-weight: bold;
-  font-size: 14px;
-}
-
-.header {
-  background: #f2f2f2;
-  font-weight: bold;
-}
-
-.nama, .jabatan {
-  text-align: left;
-  padding-left: 5px;
-}
-
-/* MINGGU */
-.minggu {
-  background: red;
-  color: white;
-  font-weight: bold;
-  writing-mode: vertical-rl;
-  transform: rotate(180deg);
-}
-
-/* KODE */
-.h { background: #00ff00; }
-.i { background: #ffff00; }
-.c { background: #00b0f0; color: white; }
-.s { background: #ffc000; }
-.a { background: #ff0000; color: white; }
-
-/* KETERANGAN */
-.keterangan {
-  width: 260px;
-  margin-top: 15px;
-}
+body{font-family:Arial;background:#fff}
+.filter{margin:10px}
+select,button{padding:5px}
+table{border-collapse:collapse;width:100%;table-layout:fixed}
+th,td{border:1px solid #000;font-size:12px;text-align:center;height:26px}
+.title{background:#f7c600;font-size:18px;font-weight:bold}
+.subtitle{background:#ffe699;font-weight:bold}
+.header{background:#eee}
+.minggu{background:red;color:#fff;writing-mode:vertical-rl;transform:rotate(180deg)}
+.nama,.jabatan{text-align:left;padding-left:5px}
+.h{background:#00ff00}.i{background:#ffff00}.c{background:#00b0f0;color:#fff}
+.s{background:#ffc000}.a{background:#ff0000;color:#fff}
+@media print {.filter,button{display:none}}
 </style>
 </head>
 
 <body>
 
-<!-- FILTER -->
 <div class="filter">
-  <label><strong>Pilih Bulan:</strong></label>
-  <select id="bulan" onchange="generateTable()">
-    <option value="0">Januari</option>
-    <option value="1">Februari</option>
-    <option value="2">Maret</option>
-    <option value="3">April</option>
-    <option value="4">Mei</option>
-    <option value="5" selected>Juni</option>
-    <option value="6">Juli</option>
-    <option value="7">Agustus</option>
-    <option value="8">September</option>
-    <option value="9">Oktober</option>
-    <option value="10">November</option>
-    <option value="11">Desember</option>
-  </select>
+Bulan:
+<select id="bulan" onchange="render()">
+<option value="0">Jan</option><option value="1">Feb</option>
+<option value="2">Mar</option><option value="3">Apr</option>
+<option value="4">Mei</option><option value="5">Jun</option>
+<option value="6">Jul</option><option value="7">Agu</option>
+<option value="8">Sep</option><option value="9">Okt</option>
+<option value="10">Nov</option><option value="11">Des</option>
+</select>
 
-  <select id="tahun" onchange="generateTable()">
-    <option value="2025">2025</option>
-    <option value="2026" selected>2026</option>
-  </select>
+Tahun:
+<select id="tahun" onchange="render()">
+<option>2025</option><option selected>2026</option>
+</select>
+
+Nama:
+<select id="filterNama" onchange="render()"></select>
+
+Jabatan:
+<select id="filterJabatan" onchange="render()"></select>
+
+<button onclick="window.print()">Print / PDF</button>
 </div>
 
-<!-- TABLE -->
-<table id="absensi">
+<table>
+<thead>
+<tr><th colspan="100" class="title">ABSENSI KARYAWAN PT MAJU JAYA</th></tr>
+<tr><th colspan="100" class="subtitle" id="periode"></th></tr>
 
-  <thead>
-    <tr>
-      <th colspan="100" class="title">ABSENSI KARYAWAN PT MAJU JAYA</th>
-    </tr>
-    <tr>
-      <th colspan="100" class="subtitle" id="periode">PERIODE JUNI 2026</th>
-    </tr>
+<tr class="header">
+<th rowspan="2">Nama</th>
+<th rowspan="2">Jabatan</th>
+<th id="colTanggal" colspan="31">Tanggal</th>
+<th rowspan="2">Hari</th>
+<th colspan="5">Keterangan</th>
+</tr>
+<tr class="header" id="headTanggal"></tr>
+</thead>
 
-    <tr class="header">
-      <th rowspan="2">Nama</th>
-      <th rowspan="2">Jabatan</th>
-      <th id="jumlahTanggal" colspan="30">Tanggal</th>
-      <th rowspan="2">Jumlah<br>Hari Kerja</th>
-      <th colspan="5">Keterangan</th>
-    </tr>
-
-    <tr class="header" id="headerTanggal"></tr>
-  </thead>
-
-  <tbody id="isiTable"></tbody>
-</table>
-
-<!-- KETERANGAN -->
-<table class="keterangan">
-  <tr><th colspan="2">Keterangan</th></tr>
-  <tr><td class="h">H</td><td>Hadir</td></tr>
-  <tr><td class="i">I</td><td>Izin</td></tr>
-  <tr><td class="c">C</td><td>Cuti</td></tr>
-  <tr><td class="s">S</td><td>Sakit</td></tr>
-  <tr><td class="a">A</td><td>Abstain</td></tr>
+<tbody id="body"></tbody>
 </table>
 
 <script>
-function generateTable() {
-  const bulan = parseInt(document.getElementById("bulan").value);
-  const tahun = parseInt(document.getElementById("tahun").value);
+const CSV_URL="https://docs.google.com/spreadsheets/d/e/2PACX-1vQzl6jOLHAiwYux6qEl-4SfBLWvAiqA5PDEoSLAK6KrqRye_ecMT7o6mTBbCKt41g/pubhtml?gid=30156212&single=true";
+let data=[];
 
-  const namaBulan = [
-    "JANUARI","FEBRUARI","MARET","APRIL","MEI","JUNI",
-    "JULI","AGUSTUS","SEPTEMBER","OKTOBER","NOVEMBER","DESEMBER"
-  ];
-
-  const hariMax = new Date(tahun, bulan+1, 0).getDate();
-
-  // PERIODE
-  document.getElementById("periode").innerText =
-    "PERIODE " + namaBulan[bulan] + " " + tahun;
-
-  // HEADER TANGGAL
-  let header = "";
-  for (let i=1;i<=hariMax;i++){
-    const hari = new Date(tahun, bulan, i).getDay();
-    if(hari===0){
-      header += `<th class="minggu">Minggu</th>`;
-    } else {
-      header += `<th>${i}</th>`;
-    }
+fetch(CSV_URL).then(r=>r.text()).then(t=>{
+ const r=t.trim().split("\n");const h=r.shift().split(",");
+ data=r.map(l=>{
+  const c=l.split(",");
+  return{
+    nama:c[h.indexOf("Nama")],
+    jabatan:c[h.indexOf("Departemen")],
+    tanggal:c[h.indexOf("Tanggal")],
+    status:c[h.indexOf("StatusFinal")]
   }
-  header += `
-    <th class="h">H</th>
-    <th class="i">I</th>
-    <th class="c">C</th>
-    <th class="s">S</th>
-    <th class="a">A</th>
-  `;
-  document.getElementById("headerTanggal").innerHTML = header;
-  document.getElementById("jumlahTanggal").colSpan = hariMax;
+ });
+ initFilter();render();
+});
 
-  // DATA SAMPLE
-  const data = [
-    {nama:"Adi", jabatan:"Operator"},
-    {nama:"Bayu", jabatan:"Operator"},
-    {nama:"Anun", jabatan:"Operator"},
-    {nama:"Robby", jabatan:"Teknisi"},
-    {nama:"Aris", jabatan:"Teknisi"}
-  ];
-
-  let body = "";
-  data.forEach(d=>{
-    body += `<tr><td class="nama">${d.nama}</td><td class="jabatan">${d.jabatan}</td>`;
-    for(let i=1;i<=hariMax;i++){
-      const hari = new Date(tahun, bulan, i).getDay();
-      body += hari===0 ? `<td class="minggu"></td>` : `<td></td>`;
-    }
-    body += `<td></td><td></td><td></td><td></td><td></td></tr>`;
-  });
-
-  document.getElementById("isiTable").innerHTML = body;
+function initFilter(){
+ const n=[...new Set(data.map(d=>d.nama))];
+ const j=[...new Set(data.map(d=>d.jabatan))];
+ filterNama.innerHTML="<option value=''>Semua</option>"+n.map(x=>`<option>${x}</option>`).join("");
+ filterJabatan.innerHTML="<option value=''>Semua</option>"+j.map(x=>`<option>${x}</option>`).join("");
 }
 
-window.onload = generateTable;
+function render(){
+ const b=+bulan.value,t=+tahun.value;
+ const nm=filterNama.value,jb=filterJabatan.value;
+ const max=new Date(t,b+1,0).getDate();
+ periode.textContent=`PERIODE ${bulan.options[b].text.toUpperCase()} ${t}`;
+ let th="";
+ for(let i=1;i<=max;i++){
+  const d=new Date(t,b,i).getDay();
+  th+=d===0?`<th class="minggu">Minggu</th>`:`<th>${i}</th>`;
+ }
+ th+=`<th class="h">H</th><th class="i">I</th><th class="c">C</th><th class="s">S</th><th class="a">A</th>`;
+ headTanggal.innerHTML=th;colTanggal.colSpan=max;
+
+ const f=data.filter(d=>{
+  const dt=new Date(d.tanggal);
+  return dt.getMonth()==b&&dt.getFullYear()==t&&(!nm||d.nama==nm)&&(!jb||d.jabatan==jb);
+ });
+
+ const g={};
+ f.forEach(d=>{
+  const h=d.nama+d.jabatan;
+  g[h]??={nama:d.nama,jabatan:d.jabatan,harian:{}};
+  g[h].harian[new Date(d.tanggal).getDate()]=d.status;
+ });
+
+ body.innerHTML="";
+ Object.values(g).forEach(r=>{
+  let H=0,I=0,C=0,S=0,A=0;
+  let tr=`<tr><td class='nama'>${r.nama}</td><td class='jabatan'>${r.jabatan}</td>`;
+  for(let i=1;i<=max;i++){
+   const s=r.harian[i]||"";
+   if(s=="H")H++;if(s=="I")I++;if(s=="C")C++;if(s=="S")S++;if(s=="A")A++;
+   tr+=`<td class='${s.toLowerCase()}'>${s}</td>`;
+  }
+  tr+=`<td>${H}</td><td>${H}</td><td>${I}</td><td>${C}</td><td>${S}</td><td>${A}</td></tr>`;
+  body.innerHTML+=tr;
+ });
+}
 </script>
 
 </body>
