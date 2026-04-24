@@ -1,4 +1,4 @@
-const SHEET_URL = 'PASTE_URL_CSV_GOOGLE_SHEET_DISINI';
+const SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQzl6jOLHAiwYux6qEl-4SfBLWvAiqA5PDEoSLAK6KrqRye_ecMT7o6mTBbCKt41g/pub?gid=30156212&single=true&output=csv';
 
 fetch(SHEET_URL)
   .then(res => res.text())
